@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Float, Text3D, Environment } from '@react-three/drei';
 import { ChevronDown, Wifi, Camera, Cpu, Usb, Zap, Cog } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 
 const FloatingIcons = () => {
   const icons = [
@@ -32,70 +34,163 @@ const FloatingIcons = () => {
   );
 };
 
-const IoTLetter = ({ letter, index, totalLetters }: { letter: string; index: number; totalLetters: number }) => {
-  const getLetterIcon = (letter: string) => {
-    switch (letter.toLowerCase()) {
-      case 'i': return <Wifi className="w-8 h-8 text-iot-teal" />;
-      case 'o': return <Camera className="w-8 h-8 text-iot-teal" />;
-      case 't': return <Cpu className="w-8 h-8 text-iot-teal" />;
-      case 'c': return <Usb className="w-8 h-8 text-iot-yellow" />;
-      case 'l': return <Zap className="w-8 h-8 text-iot-yellow" />;
-      case 'u': return <Cog className="w-8 h-8 text-iot-yellow" />;
-      case 'b': return <Wifi className="w-8 h-8 text-iot-yellow" />;
-      default: return null;
-    }
-  };
+const AnimatedTitle = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLImageElement>(null);
+  const maskRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !textRef.current || !logoRef.current || !maskRef.current) return;
+
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
+
+    // Initial state
+    gsap.set(logoRef.current, { opacity: 0, scale: 0 });
+    gsap.set(maskRef.current, { x: '-100%' });
+
+    // Animation sequence
+    tl
+      // Wait for initial display
+      .to({}, { duration: 2 })
+      
+      // Move mask from left to right (revealing logo, hiding text)
+      .to(maskRef.current, {
+        x: '100%',
+        duration: 2,
+        ease: 'power2.inOut'
+      })
+      
+      // Show logo with scale animation
+      .to(logoRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5,
+        ease: 'back.out(1.7)'
+      }, '-=1')
+      
+      // Wait with logo visible
+      .to({}, { duration: 2 })
+      
+      // Hide logo
+      .to(logoRef.current, {
+        opacity: 0,
+        scale: 0,
+        duration: 0.5,
+        ease: 'back.in(1.7)'
+      })
+      
+      // Move mask back from right to left (revealing text, hiding logo space)
+      .to(maskRef.current, {
+        x: '-100%',
+        duration: 2,
+        ease: 'power2.inOut'
+      }, '-=0.2');
+
+    return () => {
+      tl.kill();
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative inline-block">
+      {/* Main Text */}
+      <div ref={textRef} className="relative z-10">
+        <div className="mb-4 flex justify-center items-center space-x-4">
+          {['I', 'o', 'T'].map((letter, index) => (
+            <span
+              key={index}
+              className="text-8xl md:text-9xl font-paradox font-black text-transparent bg-clip-text bg-gradient-to-b from-iot-teal via-iot-glow to-iot-yellow glow-primary"
+              style={{
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.5))',
+              }}
+            >
+              {letter}
+            </span>
+          ))}
+        </div>
+        
+        <div className="flex justify-center items-center space-x-4">
+          {['C', 'L', 'U', 'B'].map((letter, index) => (
+            <span
+              key={index}
+              className="text-8xl md:text-9xl font-paradox font-black text-transparent bg-clip-text bg-gradient-to-b from-iot-teal via-iot-glow to-iot-yellow glow-primary"
+              style={{
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.5))',
+              }}
+            >
+              {letter}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Logo */}
+      <img
+        ref={logoRef}
+        src="/image copy.png"
+        alt="IoT Club Logo"
+        className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none"
+        style={{
+          filter: 'drop-shadow(0 0 30px rgba(0, 255, 255, 0.6))',
+        }}
+      />
+
+      {/* Animated Mask */}
+      <div
+        ref={maskRef}
+        className="absolute inset-0 z-30 pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, transparent 48%, #1a1a2e 50%, #1a1a2e 52%, transparent 100%)',
+          width: '100%',
+          height: '100%',
+        }}
+      />
+    </div>
+  );
+};
+
+const ScrollIndicator = () => {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 100;
+      setIsVisible(!scrolled);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <motion.div
-      initial={{ opacity: 0, rotateX: 90, scale: 0.5 }}
-      animate={{ opacity: 1, rotateX: 0, scale: 1 }}
-      transition={{
-        duration: 0.8,
-        delay: index * 0.15,
-        type: "spring",
-        stiffness: 100,
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ 
+        opacity: isVisible ? 1 : 0, 
+        y: isVisible ? 0 : 10 
       }}
-      className="relative inline-block"
+      transition={{ duration: 0.3 }}
+      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40"
+      style={{ pointerEvents: isVisible ? 'auto' : 'none' }}
     >
-      <div className="relative">
-        <span 
-          className="text-8xl md:text-9xl font-paradox font-black text-transparent bg-clip-text bg-gradient-to-b from-iot-teal via-iot-glow to-iot-yellow glow-primary"
-          style={{
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.5))',
-          }}
-        >
-          {letter}
-        </span>
-        
-        {/* IoT Icon Integration */}
-        <motion.div 
-          initial={{ scale: 0, rotate: 180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: index * 0.15 + 0.5, duration: 0.5 }}
-          className="absolute -top-4 -right-2 z-10"
-        >
-          {getLetterIcon(letter)}
-        </motion.div>
-
-        {/* Glow effect */}
-        <div 
-          className="absolute inset-0 text-8xl md:text-9xl font-paradox font-black text-iot-teal blur-sm opacity-50"
-          aria-hidden="true"
-        >
-          {letter}
-        </div>
-      </div>
+      <motion.div
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        className="flex flex-col items-center text-iot-glow"
+      >
+        <span className="text-sm font-light mb-2 tracking-wide font-paradox">Scroll to Explore</span>
+        <ChevronDown className="w-6 h-6" />
+      </motion.div>
     </motion.div>
   );
 };
 
 const HeroSection = () => {
-  const iotTitle = "IOT";
-  const clubTitle = "CLUB";
-
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-primary overflow-hidden">
       {/* 3D Background */}
@@ -110,38 +205,13 @@ const HeroSection = () => {
 
       {/* Main Content */}
       <div className="relative z-10 text-center px-4">
-        {/* IOT Title */}
+        {/* Animated IOT CLUB Title */}
         <motion.div 
-          className="mb-4 flex justify-center items-center space-x-2"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          {iotTitle.split('').map((letter, index) => (
-            <IoTLetter 
-              key={index} 
-              letter={letter} 
-              index={index} 
-              totalLetters={iotTitle.length} 
-            />
-          ))}
-        </motion.div>
-
-        {/* CLUB Title */}
-        <motion.div 
-          className="mb-8 flex justify-center items-center space-x-2"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.8 }}
-        >
-          {clubTitle.split('').map((letter, index) => (
-            <IoTLetter 
-              key={index} 
-              letter={letter} 
-              index={index + iotTitle.length} 
-              totalLetters={clubTitle.length} 
-            />
-          ))}
+          <AnimatedTitle />
         </motion.div>
 
         {/* Subtitle */}
@@ -149,7 +219,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
-          className="text-xl md:text-2xl font-paradox text-iot-glow font-light tracking-wider mb-4"
+          className="text-xl md:text-2xl font-paradox text-iot-glow font-light tracking-wider mb-4 mt-8"
         >
           Vishwakarma Institute of Technology, Kondhwa
         </motion.p>
@@ -163,24 +233,10 @@ const HeroSection = () => {
         >
           Innovating Tomorrow's Connected World Through Technology & Learning
         </motion.p>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="flex flex-col items-center text-iot-glow"
-          >
-            <span className="text-sm font-light mb-2 tracking-wide">Scroll to Explore</span>
-            <ChevronDown className="w-6 h-6" />
-          </motion.div>
-        </motion.div>
       </div>
+
+      {/* Fixed Scroll Indicator */}
+      <ScrollIndicator />
 
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-50" />
