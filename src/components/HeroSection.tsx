@@ -46,7 +46,8 @@ const AnimatedTitle = () => {
     const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
 
     // Initial state
-    gsap.set(logoRef.current, { opacity: 0, scale: 0 });
+    gsap.set(logoRef.current, { opacity: 0, scale: 0, rotation: 0 });
+    gsap.set(textRef.current, { clipPath: 'inset(0 0 0 0)' });
     gsap.set(maskRef.current, { x: '-100%' });
 
     // Animation sequence
@@ -54,9 +55,9 @@ const AnimatedTitle = () => {
       // Wait for initial display
       .to({}, { duration: 2 })
       
-      // Move mask from left to right (revealing logo, hiding text)
-      .to(maskRef.current, {
-        x: '100%',
+      // Clip the text from left to right (making it disappear)
+      .to(textRef.current, {
+        clipPath: 'inset(0 100% 0 0)',
         duration: 2,
         ease: 'power2.inOut'
       })
@@ -65,9 +66,10 @@ const AnimatedTitle = () => {
       .to(logoRef.current, {
         opacity: 1,
         scale: 1,
+        rotation: 360,
         duration: 0.5,
         ease: 'back.out(1.7)'
-      }, '-=1')
+      }, '-=0.5')
       
       // Wait with logo visible
       .to({}, { duration: 2 })
@@ -76,13 +78,14 @@ const AnimatedTitle = () => {
       .to(logoRef.current, {
         opacity: 0,
         scale: 0,
+        rotation: 720,
         duration: 0.5,
         ease: 'back.in(1.7)'
       })
       
-      // Move mask back from right to left (revealing text, hiding logo space)
-      .to(maskRef.current, {
-        x: '-100%',
+      // Reveal text back from right to left
+      .to(textRef.current, {
+        clipPath: 'inset(0 0 0 0)',
         duration: 2,
         ease: 'power2.inOut'
       }, '-=0.2');
@@ -93,7 +96,7 @@ const AnimatedTitle = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative inline-block">
+    <div ref={containerRef} className="relative inline-block w-full max-w-4xl mx-auto">
       {/* Main Text */}
       <div ref={textRef} className="relative z-10">
         <div className="mb-4 flex justify-center items-center space-x-4">
@@ -132,23 +135,22 @@ const AnimatedTitle = () => {
       {/* Logo */}
       <img
         ref={logoRef}
-        src="/image copy.png"
+        src="/image.png"
         alt="IoT Club Logo"
-        className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 object-contain z-20 pointer-events-none rounded-full"
         style={{
-          filter: 'drop-shadow(0 0 30px rgba(0, 255, 255, 0.6))',
+          filter: 'drop-shadow(0 0 30px rgba(0, 255, 255, 0.6)) blur(0px)',
+          background: 'radial-gradient(circle, rgba(26, 26, 46, 0.9) 0%, rgba(26, 26, 46, 0.7) 70%, transparent 100%)',
+          backdropFilter: 'blur(10px)',
+          border: '2px solid rgba(0, 255, 255, 0.3)',
+          mixBlendMode: 'screen',
         }}
       />
 
-      {/* Animated Mask */}
+      {/* Hidden mask element (kept for reference but not used) */}
       <div
         ref={maskRef}
-        className="absolute inset-0 z-30 pointer-events-none"
-        style={{
-          background: 'linear-gradient(90deg, transparent 0%, transparent 48%, #1a1a2e 50%, #1a1a2e 52%, transparent 100%)',
-          width: '100%',
-          height: '100%',
-        }}
+        className="absolute inset-0 z-30 pointer-events-none opacity-0"
       />
     </div>
   );
@@ -175,15 +177,15 @@ const ScrollIndicator = () => {
         y: isVisible ? 0 : 10 
       }}
       transition={{ duration: 0.3 }}
-      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40"
+      className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-40"
       style={{ pointerEvents: isVisible ? 'auto' : 'none' }}
     >
       <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="flex flex-col items-center text-iot-glow"
+        className="flex flex-col items-center text-iot-glow text-center"
       >
-        <span className="text-sm font-light mb-2 tracking-wide font-paradox">Scroll to Explore</span>
+        <span className="text-sm font-light mb-2 tracking-wide font-paradox whitespace-nowrap">Scroll to Explore</span>
         <ChevronDown className="w-6 h-6" />
       </motion.div>
     </motion.div>
