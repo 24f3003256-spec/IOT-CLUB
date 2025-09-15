@@ -201,6 +201,7 @@ const QuizSection = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -209,6 +210,7 @@ const QuizSection = () => {
     
     if (answerIndex === quizData[currentQuestion].correct) {
       setScore(score + 1);
+      setCorrectAnswers(correctAnswers + 1);
     }
 
     setTimeout(() => {
@@ -227,6 +229,7 @@ const QuizSection = () => {
     setSelectedAnswer(null);
     setShowResult(false);
     setScore(0);
+    setCorrectAnswers(0);
     setQuizComplete(false);
   };
 
@@ -343,14 +346,14 @@ const QuizSection = () => {
                   className="bg-gradient-accent h-full rounded-full shadow-glow"
                   initial={{ width: 0 }}
                   animate={{ 
-                    width: `${((currentQuestion + 1) / quizData.length) * 100}%` 
+                    width: `${(correctAnswers / quizData.length) * 100}%` 
                   }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
                 />
               </div>
               <div className="flex justify-between items-center mt-3">
                 <span className="text-sm text-muted-foreground font-paradox">
-                  Progress: {Math.round(((currentQuestion + 1) / quizData.length) * 100)}%
+                  Progress: {Math.round((correctAnswers / quizData.length) * 100)}%
                 </span>
                 <span className="text-sm text-iot-glow font-paradox">
                   Score: {score}/{quizData.length}
